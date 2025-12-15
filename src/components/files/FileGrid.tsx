@@ -6,9 +6,10 @@ interface FileGridProps {
   onStar?: (id: string) => void;
   onDelete?: (id: string) => void;
   onDownload?: (id: string) => void;
+  onFileClick?: (id: string) => void;
 }
 
-export function FileGrid({ files, view, onStar, onDelete, onDownload }: FileGridProps) {
+export function FileGrid({ files, view, onStar, onDelete, onDownload, onFileClick }: FileGridProps) {
   if (files.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -53,6 +54,7 @@ export function FileGrid({ files, view, onStar, onDelete, onDownload }: FileGrid
             onStar={onStar}
             onDelete={onDelete}
             onDownload={onDownload}
+            onFileClick={onFileClick}
           />
         ))}
       </div>
@@ -69,6 +71,7 @@ export function FileGrid({ files, view, onStar, onDelete, onDownload }: FileGrid
           onStar={onStar}
           onDelete={onDelete}
           onDownload={onDownload}
+          onFileClick={onFileClick}
         />
       ))}
     </div>
