@@ -30,6 +30,7 @@ export interface FileItem {
   modifiedAt: Date;
   starred?: boolean;
   thumbnail?: string;
+  sharedBy?: string;
 }
 
 interface FileCardProps {
@@ -38,6 +39,7 @@ interface FileCardProps {
   onStar?: (id: string) => void;
   onDelete?: (id: string) => void;
   onDownload?: (id: string) => void;
+  onFileClick?: (id: string) => void;
 }
 
 const getFileIcon = (type: string) => {
@@ -71,12 +73,15 @@ const formatDate = (date: Date) => {
   return date.toLocaleDateString();
 };
 
-export function FileCard({ file, view, onStar, onDelete, onDownload }: FileCardProps) {
+export function FileCard({ file, view, onStar, onDelete, onDownload, onFileClick }: FileCardProps) {
   const { icon: Icon, color, bg } = getFileIcon(file.type);
 
   if (view === "list") {
     return (
-      <div className="group flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-all duration-200">
+      <div 
+        className="group flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+        onClick={() => onFileClick?.(file.id)}
+      >
         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", bg)}>
           <Icon className={cn("w-5 h-5", color)} />
         </div>
@@ -129,7 +134,10 @@ export function FileCard({ file, view, onStar, onDelete, onDownload }: FileCardP
   }
 
   return (
-    <div className="group relative bg-card border border-border rounded-xl p-4 hover:shadow-elevated hover:border-primary/20 transition-all duration-300 animate-scale-in">
+    <div 
+      className="group relative bg-card border border-border rounded-xl p-4 hover:shadow-elevated hover:border-primary/20 transition-all duration-300 animate-scale-in cursor-pointer"
+      onClick={() => onFileClick?.(file.id)}
+    >
       {/* Star Button */}
       <button 
         onClick={() => onStar?.(file.id)}
