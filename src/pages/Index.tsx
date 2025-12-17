@@ -7,7 +7,7 @@ import { UploadProgress, UploadingFile } from "@/components/files/UploadProgress
 import { FileItem } from "@/components/files/FileCard";
 import FileDetailDialog from "@/components/files/FileDetailDialog";
 import { SecuritySettingsDialog, SecuritySettings } from "@/components/files/SecuritySettingsDialog";
-import { DecryptionCodeDialog } from "@/components/files/DecryptionCodeDialog";
+import { DownloadCodeDialog } from "@/components/files/DownloadCodeDialog";
 import { Button } from "@/components/ui/button";
 import { Users, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ const generateEncryptionKey = () => {
 const sampleFiles: FileItem[] = [
   { id: "1", name: "Project Proposal.pdf", type: "application/pdf", size: 2457600, modifiedAt: new Date(Date.now() - 86400000), starred: true, securityLevel: "standard" },
   { id: "2", name: "vacation-photo.jpg", type: "image/jpeg", size: 4194304, modifiedAt: new Date(Date.now() - 172800000), securityLevel: "high" },
-  { id: "3", name: "presentation.pptx", type: "application/vnd.ms-powerpoint", size: 8388608, modifiedAt: new Date(Date.now() - 259200000), securityLevel: "maximum", recipientEmail: "team@example.com", secondaryEncryptionKey: "ABC123" },
+  { id: "3", name: "presentation.pptx", type: "application/vnd.ms-powerpoint", size: 8388608, modifiedAt: new Date(Date.now() - 259200000), securityLevel: "maximum", recipientEmail: "team@example.com", secondaryEncryptionKey: "ABC123", downloadCode: "secret" },
   { id: "4", name: "budget-2024.xlsx", type: "application/vnd.ms-excel", size: 1048576, modifiedAt: new Date(Date.now() - 345600000), starred: true, securityLevel: "standard" },
   { id: "5", name: "source-code.zip", type: "application/zip", size: 15728640, modifiedAt: new Date(Date.now() - 432000000), securityLevel: "high" },
   { id: "6", name: "meeting-notes.txt", type: "text/plain", size: 12288, modifiedAt: new Date(), securityLevel: "standard" },
@@ -53,7 +53,7 @@ const Index = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [securityDialogOpen, setSecurityDialogOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [decryptionDialogOpen, setDecryptionDialogOpen] = useState(false);
+  const [downloadCodeDialogOpen, setDownloadCodeDialogOpen] = useState(false);
   const [downloadingFile, setDownloadingFile] = useState<FileItem | null>(null);
 
   const storageUsed = files.reduce((acc, file) => acc + file.size, 0);
@@ -95,21 +95,7 @@ const Index = () => {
         decryptionCode = generateDecryptionCode();
         try {
           encryptedBlob = await createEncryptedPackage(file, decryptionCode);
-          
-          // Send the decryption code via email
-          if (settings.recipientEmail) {
-            fetch("/api/send-decryption-code", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: settings.recipientEmail,
-                code: decryptionCode,
-                fileName: file.name,
-              }),
-            }).catch(() => {
-              toast.error(`Failed to send decryption code to ${settings.recipientEmail}`);
-            });
-          }
+          // Email will be sent when the file is downloaded (after Level 1 verification)
         } catch (error) {
           toast.error(`Failed to encrypt ${file.name}`);
           // Remove the failed upload from the list
@@ -144,6 +130,7 @@ const Index = () => {
             encryptionKey: generateEncryptionKey(),
             secondaryEncryptionKey: decryptionCode,
             recipientEmail: settings.recipientEmail,
+            downloadCode: settings.downloadCode,
             encryptedBlob: encryptedBlob,
             originalFile: settings.securityLevel !== "maximum" ? file : undefined,
           };
@@ -221,18 +208,37 @@ const Index = () => {
     const file = currentFiles.find(f => f.id === id);
     if (!file) return;
 
-    if (file.securityLevel === "maximum" && file.recipientEmail && file.secondaryEncryptionKey) {
-      // For maximum security files, download encrypted and require decryption
-      triggerFileDownload(file, true);
-      toast.info(`To decrypt this file, go to the Decrypt File page and enter the code sent to ${file.recipientEmail}`);
+    if (file.securityLevel === "maximum" && file.downloadCode) {
+      // For maximum security files, show download password dialog first
+      setDownloadingFile(file);
+      setDownloadCodeDialogOpen(true);
     } else {
       triggerFileDownload(file);
     }
   }, [currentFiles, triggerFileDownload]);
 
-  const handleDecryptionSuccess = useCallback(() => {
+  const handleDownloadCodeSuccess = useCallback(() => {
     if (downloadingFile) {
-      triggerFileDownload(downloadingFile);
+      // Download the encrypted file
+      triggerFileDownload(downloadingFile, true);
+      
+      // Send the decryption code via email
+      if (downloadingFile.recipientEmail && downloadingFile.secondaryEncryptionKey) {
+        fetch("/api/send-decryption-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: downloadingFile.recipientEmail,
+            code: downloadingFile.secondaryEncryptionKey,
+            fileName: downloadingFile.name,
+          }),
+        }).then(() => {
+          toast.info(`Decryption code sent to ${downloadingFile.recipientEmail}. Check your email to unlock the file.`);
+        }).catch(() => {
+          toast.error(`Failed to send decryption code`);
+        });
+      }
+      
       setDownloadingFile(null);
     }
   }, [downloadingFile, triggerFileDownload]);
@@ -373,15 +379,14 @@ const Index = () => {
         onConfirm={handleSecurityConfirm}
       />
 
-      {/* Decryption Code Dialog */}
+      {/* Download Code Dialog (Level 1 Security) */}
       {downloadingFile && (
-        <DecryptionCodeDialog
-          open={decryptionDialogOpen}
-          onOpenChange={setDecryptionDialogOpen}
+        <DownloadCodeDialog
+          open={downloadCodeDialogOpen}
+          onOpenChange={setDownloadCodeDialogOpen}
           fileName={downloadingFile.name}
-          recipientEmail={downloadingFile.recipientEmail || ""}
-          expectedCode={downloadingFile.secondaryEncryptionKey || ""}
-          onSuccess={handleDecryptionSuccess}
+          expectedCode={downloadingFile.downloadCode || ""}
+          onSuccess={handleDownloadCodeSuccess}
         />
       )}
     </div>

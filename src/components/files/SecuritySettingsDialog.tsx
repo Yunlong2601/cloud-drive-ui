@@ -25,6 +25,7 @@ interface SecuritySettingsDialogProps {
 export interface SecuritySettings {
   securityLevel: SecurityLevel;
   recipientEmail?: string;
+  downloadCode?: string;
 }
 
 const securityOptions = [
@@ -62,19 +63,22 @@ export function SecuritySettingsDialog({
 }: SecuritySettingsDialogProps) {
   const [securityLevel, setSecurityLevel] = useState<SecurityLevel>("standard");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [downloadCode, setDownloadCode] = useState("");
 
   const handleConfirm = () => {
     onConfirm({
       securityLevel,
       recipientEmail: securityLevel === "maximum" ? recipientEmail : undefined,
+      downloadCode: securityLevel === "maximum" ? downloadCode : undefined,
     });
     setSecurityLevel("standard");
     setRecipientEmail("");
+    setDownloadCode("");
     onOpenChange(false);
   };
 
   const isMaximumSecurity = securityLevel === "maximum";
-  const canConfirm = !isMaximumSecurity || (isMaximumSecurity && recipientEmail.includes("@"));
+  const canConfirm = !isMaximumSecurity || (isMaximumSecurity && recipientEmail.includes("@") && downloadCode.length >= 4);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -131,23 +135,43 @@ export function SecuritySettingsDialog({
           </RadioGroup>
 
           {isMaximumSecurity && (
-            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              <Label htmlFor="recipient-email" className="flex items-center gap-2 text-sm">
-                <Mail className="w-4 h-4" />
-                Recipient Email
-              </Label>
-              <Input
-                id="recipient-email"
-                type="email"
-                placeholder="Enter recipient's email for decryption code"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                data-testid="input-recipient-email"
-              />
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Key className="w-3 h-3" />
-                When downloaded, a secondary decryption code will be sent to this email
-              </p>
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="space-y-2">
+                <Label htmlFor="download-code" className="flex items-center gap-2 text-sm">
+                  <Lock className="w-4 h-4" />
+                  Download Password (Level 1)
+                </Label>
+                <Input
+                  id="download-code"
+                  type="text"
+                  placeholder="Set a password to download this file"
+                  value={downloadCode}
+                  onChange={(e) => setDownloadCode(e.target.value)}
+                  data-testid="input-download-code"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Recipients need this password to download the file
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="recipient-email" className="flex items-center gap-2 text-sm">
+                  <Mail className="w-4 h-4" />
+                  Recipient Email (Level 2)
+                </Label>
+                <Input
+                  id="recipient-email"
+                  type="email"
+                  placeholder="Enter recipient's email for decryption code"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  data-testid="input-recipient-email"
+                />
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Key className="w-3 h-3" />
+                  A second code will be emailed to decrypt the file after downloading
+                </p>
+              </div>
             </div>
           )}
         </div>

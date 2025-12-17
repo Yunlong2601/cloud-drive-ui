@@ -40,6 +40,7 @@ export interface FileItem {
   encryptionKey?: string;
   secondaryEncryptionKey?: string;
   recipientEmail?: string;
+  downloadCode?: string;
   encryptedBlob?: Blob;
   originalFile?: File;
 }
