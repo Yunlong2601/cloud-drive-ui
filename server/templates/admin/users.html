@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - FortiFile{% endblock %}
+
+{% block content %}
+<h1>Manage Users</h1>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Clearance</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% for role in user.roles if role %}
+                        <span class="badge badge-info">{{ role }}</span>
+                    {% endfor %}
+                </td>
+                <td><span class="badge badge-{{ user.clearance }}">{{ user.clearance }}</span></td>
+                <td>
+                    {% if user.is_active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-danger">Disabled</span>
+                    {% endif %}
+                </td>
+                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="editUser({{ user.id }}, '{{ user.clearance }}', {{ user.is_active|lower }}, [{% for role in user.roles if role %}'{{ role }}'{% if not loop.last %},{% endif %}{% endfor %}])">Edit</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; width: 400px;">
+        <h3 style="margin-bottom: 20px;">Edit User</h3>
+        <form id="editForm" method="POST">
+            <div class="form-group">
+                <label for="edit_clearance">Clearance Level</label>
+                <select id="edit_clearance" name="clearance">
+                    {% for level in clearance_levels %}
+                    <option value="{{ level }}">{{ level }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Roles</label>
+                {% for role in roles %}
+                <div style="margin-bottom: 5px;">
+                    <input type="checkbox" id="role_{{ role.id }}" name="roles" value="{{ role.id }}">
+                    <label for="role_{{ role.id }}" style="display: inline; font-weight: normal;">{{ role.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="edit_is_active" name="is_active">
+                <label for="edit_is_active" style="display: inline; font-weight: normal;">Account Active</label>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const roles = {{ roles|tojson }};
+
+function editUser(userId, clearance, isActive, userRoles) {
+    document.getElementById('editModal').style.display = 'block';
+    document.getElementById('editForm').action = '/admin/users/' + userId + '/update';
+    document.getElementById('edit_clearance').value = clearance;
+    document.getElementById('edit_is_active').checked = isActive;
+    
+    roles.forEach(role => {
+        const checkbox = document.getElementById('role_' + role.id);
+        if (checkbox) {
+            checkbox.checked = userRoles.includes(role.name);
+        }
+    });
+}
+
+function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+</script>
+{% endblock %}

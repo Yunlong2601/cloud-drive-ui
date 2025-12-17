@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Incidents - FortiFile{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-3">
+    <h1>Incidents</h1>
+    <a href="{{ url_for('create_incident') }}" class="btn btn-primary">Create Incident</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Created By</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents %}
+            <tr>
+                <td>{{ incident.id }}</td>
+                <td>{{ incident.title }}</td>
+                <td><span class="badge badge-{{ incident.severity }}">{{ incident.severity }}</span></td>
+                <td><span class="badge badge-{{ incident.status }}">{{ incident.status }}</span></td>
+                <td>{{ incident.created_by_name or 'N/A' }}</td>
+                <td>{{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ incident.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <form action="{{ url_for('update_incident', incident_id=incident.id) }}" method="POST" style="display: inline;">
+                        <select name="status" onchange="this.form.submit()" style="padding: 5px; border-radius: 4px;">
+                            <option value="open" {% if incident.status == 'open' %}selected{% endif %}>Open</option>
+                            <option value="investigating" {% if incident.status == 'investigating' %}selected{% endif %}>Investigating</option>
+                            <option value="resolved" {% if incident.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align: center;">No incidents found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
