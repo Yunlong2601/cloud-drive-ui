@@ -8,15 +8,26 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+
+if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+  console.error('ERROR: Missing email configuration. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.');
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.GMAIL_USER || '',
-    pass: process.env.GMAIL_APP_PASSWORD || '',
+    user: GMAIL_USER || '',
+    pass: GMAIL_APP_PASSWORD || '',
   },
 });
 
 app.post('/api/send-decryption-code', async (req, res) => {
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    return res.status(500).json({ error: 'Email service not configured' });
+  }
+
   const { email, code, fileName } = req.body;
 
   if (!email || !code || !fileName) {

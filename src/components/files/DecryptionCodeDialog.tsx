@@ -33,10 +33,35 @@ export function DecryptionCodeDialog({
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const handleSendCode = () => {
-    setEmailSent(true);
+  const handleSendCode = async () => {
+    setSending(true);
     setError("");
+    
+    try {
+      const response = await fetch('/api/send-decryption-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: recipientEmail,
+          code: expectedCode,
+          fileName: fileName,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+      
+      setEmailSent(true);
+    } catch (err) {
+      setError('Failed to send email. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleVerify = () => {
@@ -88,10 +113,11 @@ export function DecryptionCodeDialog({
               <Button
                 onClick={handleSendCode}
                 className="w-full"
+                disabled={sending}
                 data-testid="button-send-code"
               >
                 <Mail className="w-4 h-4 mr-2" />
-                Send Decryption Code
+                {sending ? "Sending..." : "Send Decryption Code"}
               </Button>
             </div>
           ) : (

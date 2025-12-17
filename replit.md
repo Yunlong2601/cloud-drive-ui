@@ -18,13 +18,19 @@ The security system supports three levels:
 2. **High**: Enhanced encryption with stronger algorithms
 3. **Maximum**: Double encryption - requires secondary decryption code sent via email
 
-### TODO: Email Integration
-The email sending functionality for maximum security files is currently stubbed. To enable it:
-1. Set up an email service integration (SendGrid, Resend, or Gmail)
-2. Add the email sending API key as a secret
-3. Implement the actual email sending in `DecryptionCodeDialog.tsx`
+### Email Integration (Configured)
+Email sending for decryption codes is implemented using Gmail SMTP with nodemailer.
 
-Currently, the decryption code verification works with a simulated "email sent" flow for demonstration purposes.
+**Configuration:**
+- `GMAIL_USER`: The Gmail address used for sending
+- `GMAIL_APP_PASSWORD`: Gmail app password for authentication
+- Backend server runs on port 3001
+- API endpoint: `POST /api/send-decryption-code`
+
+**Architecture:**
+- Express server (`server/index.ts`) handles email sending
+- Vite proxies `/api` requests to the backend in development
+- The workflow runs both servers: `npx tsx server/index.ts & npm run dev`
 
 ## Tech Stack
 - React 18 with TypeScript
