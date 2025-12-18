@@ -11,6 +11,7 @@ CloudVault is a React application for secure file management with features inclu
 - Search functionality
 - **File Security Levels**: Standard, High, and Maximum security options
 - **End-to-End Encryption**: Maximum security files are encrypted client-side
+- **Secure Chat**: Integrated chat sidebar with room-based messaging and 2FA protection
 
 ## Security Feature Architecture
 The security system supports three levels:
@@ -54,22 +55,38 @@ Email sending for decryption codes uses Gmail SMTP with nodemailer.
 - Lucide React for icons
 - Web Crypto API for encryption
 
+## Secure Chat Feature
+The chat sidebar provides secure messaging integrated into the main interface:
+- **Room-based messaging**: Create and join chat rooms
+- **2FA protection**: Rooms can require verification codes
+- **localStorage persistence**: Messages and rooms persist locally
+- **Simple user identification**: Enter a display name to start chatting
+
+### Data Structures (shared/schema.ts)
+- `chatRooms`: Room definitions with 2FA flag
+- `chatMessages`: Messages linked to rooms and users
+- `chat2FACodes`: Verification codes for secure rooms
+
 ## Project Structure
 ```
 src/
 ├── components/
+│   ├── chat/        # Chat components (ChatSidebar)
 │   ├── files/       # File-related components (FileCard, FileGrid, UploadZone)
 │   ├── layout/      # Layout components (Header, Sidebar)
 │   └── ui/          # Shadcn UI components
 ├── hooks/           # Custom React hooks
-├── lib/             # Utility functions (including crypto.ts)
-├── pages/           # Page components (Index, Decrypt)
+├── lib/             # Utility functions (including crypto.ts, queryClient.ts)
+├── pages/           # Page components (Index, Decrypt, Chat)
 ├── App.tsx          # Main application component
 ├── main.tsx         # Entry point
 └── index.css        # Global styles
 
 server/
 └── index.ts         # Express backend for email sending
+
+shared/
+└── schema.ts        # Database schema (Drizzle ORM)
 ```
 
 ## Pages
