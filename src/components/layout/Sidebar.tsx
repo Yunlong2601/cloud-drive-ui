@@ -20,6 +20,7 @@ interface SidebarProps {
   onSectionChange: (section: string) => void;
   storageUsed: number;
   storageTotal: number;
+  onChatOpen?: () => void;
 }
 
 const navItems = [
@@ -29,7 +30,7 @@ const navItems = [
   { id: "trash", label: "Trash", icon: Trash2 },
 ];
 
-export function Sidebar({ activeSection, onSectionChange, storageUsed, storageTotal }: SidebarProps) {
+export function Sidebar({ activeSection, onSectionChange, storageUsed, storageTotal, onChatOpen }: SidebarProps) {
   const storagePercentage = (storageUsed / storageTotal) * 100;
   
   const formatStorage = (bytes: number) => {
@@ -104,16 +105,16 @@ export function Sidebar({ activeSection, onSectionChange, storageUsed, storageTo
         </Link>
       </div>
 
-      {/* Chat Link */}
+      {/* Chat Button */}
       <div className="px-3 pb-2">
-        <Link
-          to="/chat"
+        <button
+          onClick={onChatOpen}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
-          data-testid="link-chat-page"
+          data-testid="button-open-chat"
         >
           <MessageSquare className="w-5 h-5" />
           Secure Chat
-        </Link>
+        </button>
       </div>
 
       {/* Settings */}

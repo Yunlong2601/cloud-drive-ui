@@ -8,6 +8,7 @@ import { FileItem } from "@/components/files/FileCard";
 import FileDetailDialog from "@/components/files/FileDetailDialog";
 import { SecuritySettingsDialog, SecuritySettings } from "@/components/files/SecuritySettingsDialog";
 import { DownloadCodeDialog } from "@/components/files/DownloadCodeDialog";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { Button } from "@/components/ui/button";
 import { Users, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ const Index = () => {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [downloadCodeDialogOpen, setDownloadCodeDialogOpen] = useState(false);
   const [downloadingFile, setDownloadingFile] = useState<FileItem | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const storageUsed = files.reduce((acc, file) => acc + file.size, 0);
   const storageTotal = 15 * 1073741824; // 15 GB
@@ -293,6 +295,7 @@ const Index = () => {
         onSectionChange={setActiveSection}
         storageUsed={storageUsed}
         storageTotal={storageTotal}
+        onChatOpen={() => setChatOpen(true)}
       />
       
       <main className="flex-1 flex flex-col overflow-hidden">
@@ -389,6 +392,9 @@ const Index = () => {
           onSuccess={handleDownloadCodeSuccess}
         />
       )}
+
+      {/* Chat Sidebar */}
+      <ChatSidebar isOpen={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 };
