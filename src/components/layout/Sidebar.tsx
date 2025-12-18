@@ -140,19 +140,17 @@ export function Sidebar({ activeSection, onSectionChange, storageUsed, storageTo
         </button>
       </div>
 
-      {/* Admin Dashboard Link - Only visible to admin users */}
-      {userRole === "admin" && (
-        <div className="px-3 pb-2">
-          <Link
-            to="/admin"
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-            data-testid="link-admin-dashboard"
-          >
-            <Shield className="w-5 h-5" />
-            Admin Dashboard
-          </Link>
-        </div>
-      )}
+      {/* Admin Dashboard Link */}
+      <div className="px-3 pb-2">
+        <Link
+          to="/admin"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-200"
+          data-testid="link-admin-dashboard"
+        >
+          <Shield className="w-5 h-5" />
+          Admin Dashboard
+        </Link>
+      </div>
 
       {/* Settings */}
       <div className="p-3 border-t border-border">
