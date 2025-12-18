@@ -3,7 +3,7 @@ import cors from 'cors';
 import nodemailer from 'nodemailer';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { setupAuth, isAuthenticated } from './replitAuth';
+import { setupSimpleAuth, isSimpleAuthenticated } from './simpleAuth';
 import { storage } from './storage';
 
 const app = express();
@@ -36,23 +36,7 @@ const transporter = nodemailer.createTransport({
 });
 
 async function initializeApp() {
-  try {
-    await setupAuth(app);
-    console.log('Authentication setup complete');
-  } catch (error) {
-    console.error('Failed to setup authentication:', error);
-  }
-
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  setupSimpleAuth(app);
 
   app.post('/api/send-decryption-code', async (req, res) => {
     if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
@@ -94,7 +78,7 @@ async function initializeApp() {
     }
   });
 
-  app.get('/api/chat/rooms', isAuthenticated, async (req, res) => {
+  app.get('/api/chat/rooms', isSimpleAuthenticated, async (req, res) => {
     try {
       const rooms = await storage.getChatRooms();
       res.json(rooms);
@@ -104,9 +88,9 @@ async function initializeApp() {
     }
   });
 
-  app.post('/api/chat/rooms', isAuthenticated, async (req: any, res) => {
+  app.post('/api/chat/rooms', isSimpleAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const { name, description, requires2FA } = req.body;
       const room = await storage.createChatRoom({
         name,
@@ -121,7 +105,7 @@ async function initializeApp() {
     }
   });
 
-  app.get('/api/chat/rooms/:roomId/messages', isAuthenticated, async (req, res) => {
+  app.get('/api/chat/rooms/:roomId/messages', isSimpleAuthenticated, async (req, res) => {
     try {
       const roomId = parseInt(req.params.roomId);
       const messages = await storage.getChatMessages(roomId);
@@ -132,14 +116,14 @@ async function initializeApp() {
     }
   });
 
-  app.post('/api/chat/2fa/request', isAuthenticated, async (req: any, res) => {
+  app.post('/api/chat/2fa/request', isSimpleAuthenticated, async (req: any, res) => {
     if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
       return res.status(500).json({ error: 'Email service not configured' });
     }
 
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const userId = req.session.user.id;
+      const user = req.session.user;
       const { roomId } = req.body;
 
       if (!user?.email) {
@@ -181,9 +165,9 @@ async function initializeApp() {
     }
   });
 
-  app.post('/api/chat/2fa/verify', isAuthenticated, async (req: any, res) => {
+  app.post('/api/chat/2fa/verify', isSimpleAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const { roomId, code } = req.body;
 
       const verified = await storage.verify2FACode(userId, roomId, code);
@@ -198,9 +182,9 @@ async function initializeApp() {
     }
   });
 
-  app.get('/api/chat/2fa/status/:roomId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/chat/2fa/status/:roomId', isSimpleAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.user.id;
       const roomId = parseInt(req.params.roomId);
       
       const room = await storage.getChatRoom(roomId);
